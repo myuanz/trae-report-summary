@@ -1,0 +1,9 @@
+[project]
+name = "trae-report-summary"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "air>=0.39.0",
+]
