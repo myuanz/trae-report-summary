@@ -51,6 +51,25 @@
             margin-bottom: 20px;
         }
         
+        .example-buttons {
+            margin-bottom: 15px;
+        }
+        
+        .btn-example {
+            background: #95a5a6;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background 0.2s;
+        }
+        
+        .btn-example:hover {
+            background: #7f8c8d;
+        }
+        
         label {
             display: block;
             margin-bottom: 8px;
@@ -218,6 +237,10 @@
         <div class="content">
             <form id="analyzeForm">
                 <div class="form-group">
+                    <div class="example-buttons">
+                        <button type="button" class="btn-example" onclick="loadExample('log1')">Load Example 1</button>
+                        <button type="button" class="btn-example" onclick="loadExample('log2')">Load Example 2</button>
+                    </div>
                     <label for="log_content">Paste your Trae log content:</label>
                     <textarea 
                         name="log_content" 
@@ -233,6 +256,24 @@
     </div>
 
     <script>
+        // Load example log file
+        function loadExample(logName) {
+            const logPath = `examples/${logName}.txt`;
+            fetch(logPath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load example log');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    document.getElementById('log_content').value = data;
+                })
+                .catch(error => {
+                    alert('无法加载示例日志: ' + error.message);
+                });
+        }
+        
         function parseLog(logContent) {
             const lines = logContent.trim().split('\n');
             const toolCalls = [];
