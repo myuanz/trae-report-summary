@@ -226,6 +226,46 @@
         .hidden {
             display: none;
         }
+        
+        .text-report {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .text-report h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.4em;
+            font-weight: 400;
+        }
+        
+        .text-report textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+        
+        .copy-btn {
+            background: #27ae60;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #229954;
+        }
     </style>
 </head>
 <body>
@@ -323,6 +363,68 @@
                 statusCounts,
                 failedCalls
             };
+        }
+        
+        function generateTextReport(stats) {
+            const sortedTools = Object.entries(stats.toolCounts)
+                .sort((a, b) => b[1] - a[1]);
+            const sortedStatuses = Object.entries(stats.statusCounts)
+                .sort((a, b) => b[1] - a[1]);
+            
+            let report = '================================\n';
+            report += '   Trae Log Analysis Report\n';
+            report += '================================\n\n';
+            
+            // Summary
+            report += '📊 Summary\n';
+            report += '─────────────────────────────\n';
+            report += `Total Calls:      ${stats.totalCalls}\n`;
+            report += `Successful Calls: ${stats.successCount}\n`;
+            report += `Success Rate:     ${stats.totalCalls > 0 ? (stats.successCount / stats.totalCalls * 100).toFixed(1) : 0}%\n`;
+            report += `Unique Tools:     ${Object.keys(stats.toolCounts).length}\n\n`;
+            
+            // Tool Usage Details
+            report += '🔧 Tool Usage Details\n';
+            report += '─────────────────────────────\n';
+            const maxToolNameLen = Math.max(...sortedTools.map(([name]) => name.length), 15);
+            report += `${'Tool Name'.padEnd(maxToolNameLen)}  Count\n`;
+            report += `${'─'.repeat(maxToolNameLen)}  ─────\n`;
+            sortedTools.forEach(([tool, count]) => {
+                report += `${tool.padEnd(maxToolNameLen)}  ${count}\n`;
+            });
+            report += '\n';
+            
+            // Status Breakdown
+            if (Object.keys(stats.statusCounts).length > 1) {
+                report += '📈 Status Breakdown\n';
+                report += '─────────────────────────────\n';
+                report += `${'Status'.padEnd(15)}  Count  Percentage\n`;
+                report += `${'─'.repeat(15)}  ─────  ──────────\n`;
+                sortedStatuses.forEach(([status, count]) => {
+                    const percentage = (count / stats.totalCalls * 100).toFixed(1);
+                    report += `${status.padEnd(15)}  ${String(count).padStart(5)}  ${percentage.padStart(6)}%\n`;
+                });
+                report += '\n';
+            }
+            
+            // Non-Success Calls
+            if (stats.failedCalls.length > 0) {
+                report += `⚠️  Non-Success Calls (${stats.failedCalls.length})\n`;
+                report += '─────────────────────────────\n';
+                const maxFailedToolLen = Math.max(...stats.failedCalls.map(c => c.tool.length), 15);
+                report += `${'Tool Name'.padEnd(maxFailedToolLen)}  Status\n`;
+                report += `${'─'.repeat(maxFailedToolLen)}  ──────\n`;
+                stats.failedCalls.forEach(call => {
+                    report += `${call.tool.padEnd(maxFailedToolLen)}  ${call.status}\n`;
+                });
+                report += '\n';
+            }
+            
+            report += '================================\n';
+            report += `Generated: ${new Date().toLocaleString()}\n`;
+            report += '================================\n';
+            
+            return report;
         }
         
         function renderResults(stats) {
@@ -427,7 +529,37 @@
                 `;
             }
             
+            // Add text report section
+            const textReport = generateTextReport(stats);
+            html += `
+                <div class="text-report">
+                    <h2 class="section-title">📄 Text Report</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 10px;">Copy the report below for easy sharing</p>
+                    <textarea readonly id="textReportContent">${textReport}</textarea>
+                    <button class="copy-btn" onclick="copyTextReport()">📋 Copy Report</button>
+                </div>
+            `;
+            
             resultsDiv.innerHTML = html;
+        }
+        
+        function copyTextReport() {
+            const textarea = document.getElementById('textReportContent');
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                btn.style.background = '#2ecc71';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#27ae60';
+                }, 2000);
+            } catch (err) {
+                alert('Failed to copy. Please manually select and copy the text.');
+            }
         }
         
         // Handle form submission
