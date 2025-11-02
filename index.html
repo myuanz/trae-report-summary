@@ -562,6 +562,18 @@
             }
         }
         
+        // Auto-analyze on paste
+        document.getElementById('log_content').addEventListener('paste', function(e) {
+            // Wait a bit for the paste content to be inserted
+            setTimeout(() => {
+                const logContent = this.value;
+                if (logContent.trim()) {
+                    const stats = parseLog(logContent);
+                    renderResults(stats);
+                }
+            }, 100);
+        });
+        
         // Handle form submission
         document.getElementById('analyzeForm').addEventListener('submit', function(e) {
             e.preventDefault();
